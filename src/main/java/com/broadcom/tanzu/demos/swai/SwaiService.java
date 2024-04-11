@@ -16,6 +16,8 @@
 
 package com.broadcom.tanzu.demos.swai;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.ChatClient;
@@ -33,36 +35,29 @@ import java.util.Map;
 class SwaiService {
     private final Logger logger = LoggerFactory.getLogger(SwaiService.class);
 
-    private final StarWarsService svc;
     private final ChatClient chatClient;
+    private final ObservationRegistry reg;
     @Value("classpath:/system-prompt.st")
     private Resource systemPromptRes;
     @Value("classpath:/ask-prompt.st")
     private Resource askPromptRes;
 
-    SwaiService(StarWarsService svc, ChatClient chatClient) {
-        this.svc = svc;
+    SwaiService(ChatClient chatClient, ObservationRegistry reg) {
         this.chatClient = chatClient;
+        this.reg = reg;
     }
 
     String askAI(String query) {
-        /*
-        final var films = new StringBuffer(128);
-        films.append("ID\tTITLE\tEPISODE\tRELEASE DATE\n");
-        for (final var film : svc.findFilms()) {
-            films.append(film.id()).append("\t")
-                    .append(film.title()).append("\t")
-                    .append(film.episode()).append("\t")
-                    .append(film.releaseDate()).append("\n");
-        }
-         */
-
         final var sysMsg = new SystemPromptTemplate(systemPromptRes).createMessage();
         final var askMsg = new PromptTemplate(askPromptRes).createMessage(Map.of(
-                "question", query//, "films", films
+                "question", query
         ));
+
         final var prompt = new Prompt(List.of(sysMsg, askMsg));
-        logger.debug("Sending prompt:\n{}", prompt.getContents());
-        return chatClient.call(prompt).getResult().getOutput().getContent();
+        return Observation.createNotStarted("sendPrompt", reg)
+                .observe(() -> {
+                    logger.debug("Sending prompt:\n{}", prompt.getContents());
+                    return chatClient.call(prompt).getResult().getOutput().getContent();
+                });
     }
 }
