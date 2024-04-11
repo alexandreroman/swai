@@ -17,6 +17,7 @@
 package com.broadcom.tanzu.demos.swai;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,19 +35,19 @@ class SwaiConfig {
     }
 
     @Bean
-    @Description("Find all planets. The result is a list of all the planets you can see in the Star Wars series. Each entry includes a planet identifier, a name and the population.")
+    @Description("Find all planets. The result is a list of every planets mentioned in the Star Wars series. Each entry includes a planet identifier, a name and a population.")
     Function<NoArgRequest, List<Planet>> planets(StarWarsService svc) {
         return req -> svc.findPlanets();
     }
 
     @Bean
-    @Description("Find characters by film. The result is a list of all characters you can see in a given Star Wars film. Each entry includes a people identifier, a name and an origin (homeworld).")
+    @Description("Find characters by film. The result is a list of every characters appearing in a given Star Wars film. Each entry includes a people identifier, a name and an origin (homeworld).")
     Function<ByFilmRequest, List<People>> charactersByFilm(StarWarsService svc) {
         return req -> svc.findCharactersByFilm(req.filmId());
     }
 
     @Bean
-    @Description("Find characters by name. The result is a list of characters who match the given name. Each entry includes a people identifier, a name and an origin (homeworld).")
+    @Description("Find characters by name. The result is a list of characters matching the given name. Each entry includes a people identifier, a name and an origin (homeworld).")
     Function<ByNameRequest, List<People>> charactersByName(StarWarsService svc) {
         return req -> svc.findCharactersByName(req.name());
     }
@@ -58,23 +59,26 @@ class SwaiConfig {
     }
 
     @Bean
-    @Description("Find planets by film. The result is a list of planets you can see in a given Star Wars film. Each entry includes a planet identifier, a name and the population.")
+    @Description("Find planets by film. The result is a list of planets mentioned in a given Star Wars film. Each entry includes a planet identifier, a name and a population.")
     Function<ByFilmRequest, List<Planet>> planetsByFilm(StarWarsService svc) {
         return req -> svc.findPlanetsByFilm(req.filmId());
     }
 
     @JsonClassDescription("A request using a planet identifier")
     record ByPlanetRequest(
+            @JsonProperty(required = true)
             @JsonPropertyDescription("Planet identifier") int planetId) {
     }
 
     @JsonClassDescription("A request using a film identifier")
     record ByFilmRequest(
+            @JsonProperty(required = true)
             @JsonPropertyDescription("Film identifier") int filmId) {
     }
 
     @JsonClassDescription("A request using a character name")
     record ByNameRequest(
+            @JsonProperty(required = true)
             @JsonPropertyDescription("Character name") String name) {
     }
 
